@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提示词优化工具</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-decoration">
+                <svg width="100%" height="80" style="position: absolute; top: 0; left: 0; opacity: 0.08;">
+                    <defs>
+                        <pattern id="cloud-pattern" x="0" y="0" width="120" height="80" patternUnits="userSpaceOnUse">
+                            <path d="M40,30 Q45,25 50,30 Q55,25 60,30 Q55,35 50,30 Q45,35 40,30" fill="#c97a5c"/>
+                            <circle cx="30" cy="50" r="2" fill="#c97a5c"/>
+                            <circle cx="80" cy="20" r="2" fill="#c97a5c"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#cloud-pattern)"/>
+                </svg>
+            </div>
+            <svg width="160" height="160" viewBox="0 0 160 160" style="margin-bottom: 24px; filter: drop-shadow(0 4px 8px rgba(201, 122, 92, 0.2));">
+                <defs>
+                    <linearGradient id="main-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:rgb(201,122,92);stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:rgb(178,102,72);stop-opacity:1" />
+                    </linearGradient>
+                    <radialGradient id="bg-grad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" style="stop-color:#fefcf8;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#f5f1e8;stop-opacity:0.5" />
+                    </radialGradient>
+                </defs>
+                <!-- 背景圆 -->
+                <circle cx="80" cy="80" r="75" fill="url(#bg-grad)"/>
+                <!-- 外圆装饰 -->
+                <circle cx="80" cy="80" r="70" stroke="url(#main-grad)" stroke-width="2" fill="none" opacity="0.4"/>
+                <!-- 内圆装饰 -->
+                <circle cx="80" cy="80" r="55" stroke="url(#main-grad)" stroke-width="1.5" fill="none" opacity="0.3"/>
+                <!-- 装饰小圆点 -->
+                <circle cx="80" cy="20" r="3" fill="url(#main-grad)" opacity="0.6"/>
+                <circle cx="80" cy="140" r="3" fill="url(#main-grad)" opacity="0.6"/>
+                <circle cx="20" cy="80" r="3" fill="url(#main-grad)" opacity="0.6"/>
+                <circle cx="140" cy="80" r="3" fill="url(#main-grad)" opacity="0.6"/>
+                <!-- 主文字 -->
+                <text x="80" y="105" text-anchor="middle" font-size="72" font-family="KaiTi, STKaiti, SimSun, serif" font-weight="bold" fill="url(#main-grad)" style="letter-spacing: 2px;">文</text>
+            </svg>
+            <h1>提示词优化工具</h1>
+            <p class="subtitle">基于多轮对话的智能提示词优化 · AI协作优化引擎</p>
+            
+            <!-- 用户信息栏 -->
+            <div class="user-info-bar">
+                <div class="user-info">
+                    <svg width="24" height="24" viewBox="0 0 24 24" style="vertical-align: middle;">
+                        <defs>
+                            <linearGradient id="user-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:rgb(201,122,92);stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:rgb(178,102,72);stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="12" cy="8" r="4" fill="url(#user-grad)" opacity="0.8"/>
+                        <path d="M4 20 Q4 14 12 14 Q20 14 20 20" stroke="url(#user-grad)" stroke-width="2" fill="none" opacity="0.8"/>
+                    </svg>
+                    <span class="username" id="current-username">加载中...</span>
+                </div>
+                <div class="session-selector">
+                    <label id="session-label">当前会话：</label>
+                    <select id="session-select" onchange="switchSession()">
+                        <option value="">加载中...</option>
+                    </select>
+                    <button class="btn btn-sm btn-secondary" onclick="createNewSession()">新建会话</button>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="logout()">登出</button>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 左侧：对话历史和输入 -->
+            <div class="left-panel">
+                <!-- 需求输入 -->
+                <div class="card input-card">
+                    <div class="card-header">
+                        <h2>需求描述</h2>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="clearInput()">清空</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="user-input" class="textarea" placeholder="请输入您的自然语言需求..."></textarea>
+                    </div>
+                </div>
+
+                <!-- 对话历史区域 -->
+                <div class="card history-card">
+                    <div class="card-header">
+                        <h2>对话历史</h2>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="openAddDialog()">添加对话</button>
+                            <button class="btn btn-secondary btn-sm" onclick="openEditDialog()">编辑</button>
+                            <button class="btn btn-secondary btn-sm" onclick="clearHistory()">清空</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="history-list" class="history-list">
+                            <div class="empty-state">
+                                <p>暂无对话历史</p>
+                                <p class="hint">点击"添加对话"开始记录您与大模型的对话</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：优化结果 -->
+            <div class="right-panel">
+                <!-- 控制按钮 -->
+                <div class="control-bar">
+                    <button id="optimize-btn" class="btn btn-primary" onclick="startOptimize()">
+                        <span class="btn-icon">✨</span>
+                        <span>开始优化</span>
+                    </button>
+                    <button id="pause-btn" class="btn btn-secondary" onclick="pauseOptimize()" disabled>
+                        <span class="btn-icon">⏸</span>
+                        <span>暂停</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearResults()">
+                        <span class="btn-icon">🗑</span>
+                        <span>清空</span>
+                    </button>
+                    <div class="status-indicator">
+                        <div id="progress-bar" class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <span id="status-text" class="status-text">就绪</span>
+                    </div>
+                </div>
+
+                <!-- 结果显示区域 -->
+                <div class="results-container">
+                    <!-- DeepSeek结果 -->
+                    <div class="card result-card" data-step="1">
+                        <div class="card-header">
+                            <div class="step-badge">STEP 1</div>
+                            <h3>DeepSeek 输出</h3>
+                            <button class="btn-icon-only" onclick="copyResult('deepseek')" title="复制">
+                                <span>📋</span>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="deepseek-result" class="result-content">等待开始优化...</div>
+                        </div>
+                    </div>
+
+                    <!-- Kimi结果 -->
+                    <div class="card result-card" data-step="2">
+                        <div class="card-header">
+                            <div class="step-badge">STEP 2</div>
+                            <h3>Kimi 输出</h3>
+                            <button class="btn-icon-only" onclick="copyResult('kimi')" title="复制">
+                                <span>📋</span>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="kimi-result" class="result-content">等待开始优化...</div>
+                        </div>
+                    </div>
+
+                    <!-- Qwen结果 -->
+                    <div class="card result-card result-card-final" data-step="3">
+                        <div class="card-header">
+                            <div class="step-badge step-badge-final">FINAL</div>
+                            <h3>Qwen 最终输出</h3>
+                            <button class="btn-icon-only" onclick="copyResult('qwen')" title="复制">
+                                <span>📋</span>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="qwen-result" class="result-content">等待开始优化...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加对话对话框 -->
+    <div id="add-dialog" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加对话轮次</h2>
+                <button class="modal-close" onclick="closeAddDialog()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-hint">这里记录的是您使用优化后的提示词与大模型（如ChatGPT、Claude等）进行多轮对话的历史。</p>
+                <div class="form-group">
+                    <label>用户输入（您对大模型说的话）</label>
+                    <textarea id="dialog-user-input" class="textarea" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="form-group-header">
+                        <label>大模型回复（AI的回复内容）</label>
+                        <button class="btn btn-link btn-sm" onclick="summarizeDialogContent()">自动总结长回复</button>
+                    </div>
+                    <textarea id="dialog-ai-input" class="textarea" rows="6"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddDialog()">取消</button>
+                <button class="btn btn-primary" onclick="saveDialog()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑对话对话框 -->
+    <div id="edit-dialog" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>编辑对话历史</h2>
+                <button class="modal-close" onclick="closeEditDialog()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="edit-history-list" class="edit-history-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditDialog()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

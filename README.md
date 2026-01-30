@@ -78,6 +78,7 @@ python app.py
 - **DeepSeek (deepseek-chat)**：初步分析用户需求，生成结构化提示词框架
 - **Kimi (moonshot-v1-128k)**：在 DeepSeek 基础上进行精细化优化，补充细节
 - **Qwen (qwen-plus)**：综合前两个模型的结果，生成最终优化版本
+- **流程**：用户输入 → 构建上下文 → Step 1 (DeepSeek) → Step 2 (Kimi) → Step 3 (Qwen) → 返回三个结果
 
 ### 架构设计
 - **三层架构**：表现层（Web界面）→ 业务逻辑层（Flask API）→ 数据访问层（DAO）
@@ -131,28 +132,17 @@ python app.py
 
 **技术实现：**
 
-**核心流程（PromptOptimizerCore）：**
-```
-用户输入 → 构建上下文 → Step 1 (DeepSeek) → Step 2 (Kimi) → Step 3 (Qwen) → 返回三个结果
-```
-
 **Step 1 - DeepSeek 初步分析：**
 - **作用**：分析用户需求，生成结构化的提示词框架
 - **实现**：LangChain ChatPromptTemplate + DeepSeek API
-- **Prompt 模板**：系统提示词 + 用户输入（含历史对话）
-- **输出**：基础提示词结构
 
 **Step 2 - Kimi 精细化优化：**
 - **作用**：在 DeepSeek 结果基础上补充细节、优化表达
-- **输入**：用户需求 + DeepSeek 的输出
 - **实现**：使用 moonshot-v1-128k 大上下文模型
-- **输出**：精细化的提示词
 
 **Step 3 - Qwen 综合优化：**
 - **作用**：综合前两个模型的优点，生成最终版本
-- **输入**：用户需求 + DeepSeek 结果 + Kimi 结果
 - **实现**：使用通义千问 qwen-plus 模型
-- **输出**：最终优化的提示词
 
 **重试机制：**
 - 每个模型调用失败时自动重试（默认 3 次）
@@ -234,19 +224,14 @@ AI: ...
 ```
 prompt_optimizer/
 ├── config/                 # 配置模块
-├── src/                    # 源代码
-│   ├── core/              # 核心业务逻辑
-│   ├── models/            # AI模型管理
-│   └── utils/             # 工具类
+├── src/                    # 源代码（core/models/utils）
 ├── static/                 # 前端静态文件
 ├── markdowns/             # 项目文档
-├── app.py                  # 主应用
+├── app.py                  # Flask主应用
 └── init_db.py             # 数据库初始化
 ```
 
-## 📋 详细文档
-
-- [代码架构图](markdowns/代码架构图.md) - 详细的系统架构和代码结构说明
+详细的文件结构和系统架构图请查看 [代码架构图](markdowns/代码架构图.md)。
 
 ## 🔧 开发指南
 

@@ -57,8 +57,7 @@ python init_db.py
 ```bash
 python app.py
 ```
-
-访问：http://localhost:5000
+访问地址：http://localhost:5000
 
 ## 📚 技术栈与实现原理
 

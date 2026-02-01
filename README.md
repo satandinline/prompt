@@ -1,5 +1,7 @@
 # 提示词优化工具 (Prompt Optimizer)
 
+## prompt构建中的信息素养
+
 一个基于多AI模型协作的提示词优化工具，通过 DeepSeek、Kimi 和 Qwen 三个大模型的逐步优化，帮助用户生成更优质的 AI 提示词。
 
 ## ✨ 核心特性
